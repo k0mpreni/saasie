@@ -1,38 +1,52 @@
-"use client";
-import Price from "@/components/Price";
-import Switch from "@/components/Switch";
-import { useState } from "react";
+import { Database } from "@/lib/database.types";
+import { stripe } from "@/lib/stripe";
+import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import Prices from "./prices";
 
 type Props = {};
 
-const Pricing = (props: Props) => {
-  const [yearly, setYearly] = useState(false);
-  const prices = [];
-  return (
-    <section className="bg-gray-50 p y-10 sm:py-16 lg:py-24">
-      <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold leading-tight text-black sm:text-4xl lg:text-5xl">
-            Pricing & Plans
-          </h2>
-          <p className="max-w-lg mx-auto mt-4 text-base leading-relaxed text-gray-600">
-            Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet
-            sint. Velit officia consequat duis.
-          </p>
-        </div>
-        <Switch onClick={() => setYearly(!yearly)} checked={yearly} />
-        <div className="grid max-w-3xl grid-cols-1 gap-6 mx-auto mt-8 sm:mt-16 sm:grid-cols-2">
-          {prices.map((price, index) => (
-            <Price
-              key={`price-${index}-${price.id}`}
-              price={price}
-              principal={index === 1}
-            />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+const Pricing = async (props: Props) => {
+  const productsRes = await stripe.products.list();
+  const priceRes = await stripe.prices.list();
+  const supabase = createServerActionClient<Database>({ cookies });
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(
+      "stripe_subscription_id,stripe_plan_id, stripe_subscription_status"
+    );
+  const subscriptionId = data && data[0]?.stripe_subscription_id;
+  const planId = data && data[0]?.stripe_plan_id;
+  let userSubscription = {
+    status: "",
+    cancel_end: null,
+    canceled: false,
+  };
+  if (subscriptionId) {
+    const subscription = await stripe.subscriptions.retrieve(
+      subscriptionId as string
+    );
+    userSubscription = {
+      status: subscription.status,
+      cancel_end: subscription.cancel_at,
+      canceled: subscription.status === "canceled",
+    };
+  }
+  const plans = priceRes.data
+    .map((el) => {
+      const isYearly = el.recurring?.interval === "year";
+      return {
+        ...el,
+        name: productsRes.data[0].name,
+        yearly: isYearly,
+        current: planId === el.id && userSubscription.status === "active",
+        cancel_end: userSubscription.cancel_end,
+        canceled: userSubscription.canceled,
+      };
+    })
+    .sort((a, b) => (a?.unit_amount < b?.unit_amount ? -1 : 0));
+
+  return <Prices prices={plans} />;
 };
 
 export default Pricing;

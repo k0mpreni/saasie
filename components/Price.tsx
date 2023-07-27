@@ -1,8 +1,28 @@
-type Props = { price: any; principal?: boolean; noCard?: boolean };
+import { FormEvent } from "react";
 
-const Price = ({ price, principal, noCard }: Props) => {
-  const choosePrice = () => console.log("price choosed");
-  const cancelPrice = () => console.log("price canceled");
+type Props = {
+  price: any;
+  principal?: boolean;
+  noCard?: boolean;
+  choosePrice: (priceId: string) => void;
+  cancelPrice: (priceId: string) => void;
+};
+
+const Price = ({
+  price,
+  principal,
+  noCard,
+  choosePrice,
+  cancelPrice,
+}: Props) => {
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (price.current && !price.cancelled) {
+      cancelPrice(price.id);
+    } else {
+      choosePrice(price.id);
+    }
+  };
 
   return (
     <div
@@ -10,7 +30,7 @@ const Price = ({ price, principal, noCard }: Props) => {
         principal ? "border-blue-600" : "border-transparent"
       } rounded-md`}
     >
-      <form method="POST" onSubmit={choosePrice}>
+      <form method="POST" onSubmit={handleSubmit}>
         <input
           className="hidden"
           type="hidden"
@@ -47,14 +67,13 @@ const Price = ({ price, principal, noCard }: Props) => {
                 fill="currentColor"
               >
                 <path
-                  fill-rule="evenodd"
+                  fillRule="evenodd"
                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clip-rule="evenodd"
+                  clipRule="evenodd"
                 />
               </svg>
               <span className="text-base font-medium text-gray-900">
-                {" "}
-                1 Domain License{" "}
+                1 Domain License
               </span>
               <svg
                 className="w-4 h-4 ml-0.5 text-gray-500"
@@ -64,9 +83,9 @@ const Price = ({ price, principal, noCard }: Props) => {
                 stroke="currentColor"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
@@ -80,9 +99,9 @@ const Price = ({ price, principal, noCard }: Props) => {
                 fill="currentColor"
               >
                 <path
-                  fill-rule="evenodd"
+                  fillRule="evenodd"
                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clip-rule="evenodd"
+                  clipRule="evenodd"
                 />
               </svg>
               <span className="text-base font-medium text-gray-900">
@@ -98,9 +117,9 @@ const Price = ({ price, principal, noCard }: Props) => {
                 fill="currentColor"
               >
                 <path
-                  fill-rule="evenodd"
+                  fillRule="evenodd"
                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clip-rule="evenodd"
+                  clipRule="evenodd"
                 />
               </svg>
               <span className="text-base font-medium text-gray-400">
@@ -117,9 +136,9 @@ const Price = ({ price, principal, noCard }: Props) => {
                 fill="currentColor"
               >
                 <path
-                  fill-rule="evenodd"
+                  fillRule="evenodd"
                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clip-rule="evenodd"
+                  clipRule="evenodd"
                 />
               </svg>
               <span className="text-base font-medium text-gray-400">
@@ -130,20 +149,14 @@ const Price = ({ price, principal, noCard }: Props) => {
           </ul>
 
           <button
-            disabled={price.current}
             className={`inline-flex items-center justify-center w-full px-4 py-4 mt-8 font-semibold text-white transition-all duration-200 rounded-md ${
               principal
                 ? "bg-gradient-to-r from-fuchsia-600 to-blue-600 hover:opacity-80 focus:opacity-80"
                 : "bg-gray-800 hover:bg-gray-600 focus:bg-gray-600"
             }`}
           >
-            {price.current ? "Your plan" : "Get this plan"}
+            {price.current ? "Cancel" : "Subscribe"}
           </button>
-          {price.current && !price.cancelled && (
-            <button onClick={cancelPrice} className="underline py-5">
-              Cancel
-            </button>
-          )}
           {noCard && (
             <p className="mt-5 text-sm text-gray-500">
               No Credit Card Required

@@ -15,7 +15,7 @@ const LoginForm = ({ session }: { session: Session | null }) => {
     try {
       await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: "/pricing" },
+        options: { redirectTo: `${location.origin}/api/auth/callback` },
       });
       router.refresh();
     } catch (e) {
@@ -27,7 +27,9 @@ const LoginForm = ({ session }: { session: Session | null }) => {
     try {
       await supabase.auth.signInWithOAuth({
         provider: "github",
-        options: { redirectTo: "/pricing" },
+        options: {
+          redirectTo: `${process.env.NEXT_PUBLIC_OWN_URL}/api/auth/callback`,
+        },
       });
       router.refresh();
     } catch (e) {
@@ -48,6 +50,7 @@ const LoginForm = ({ session }: { session: Session | null }) => {
   if (session) {
     return <button onClick={handleSignOut}>Logout</button>;
   }
+
   return (
     <section>
       <div className="flex items-center justify-center px-4 py-10 bg-gray-50 sm:px-6 lg:px-8 sm:py-16 lg:py-24">
