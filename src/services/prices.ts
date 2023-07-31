@@ -1,12 +1,10 @@
 import { Database } from "@/lib/database.types";
 import { stripe } from "@/lib/stripe";
+import { TPrice, TUserSubscription } from "@/lib/types/prices";
 import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import Prices from "./prices";
 
-type Props = {};
-
-const Pricing = async (props: Props) => {
+export const getPrices = async () => {
   const productsRes = await stripe.products.list();
   const priceRes = await stripe.prices.list();
   const supabase = createServerActionClient<Database>({ cookies });
@@ -17,7 +15,7 @@ const Pricing = async (props: Props) => {
     );
   const subscriptionId = data && data[0]?.stripe_subscription_id;
   const planId = data && data[0]?.stripe_plan_id;
-  let userSubscription = {
+  let userSubscription: TUserSubscription = {
     status: "",
     cancel_end: null,
     canceled: false,
@@ -32,21 +30,18 @@ const Pricing = async (props: Props) => {
       canceled: subscription.status === "canceled",
     };
   }
-  const plans = priceRes.data
-    .map((el) => {
-      const isYearly = el.recurring?.interval === "year";
-      return {
-        ...el,
+  const prices = priceRes.data
+    .map(
+      (el): TPrice => ({
+        id: el.id,
         name: productsRes.data[0].name,
-        yearly: isYearly,
+        yearly: el.recurring?.interval === "year",
         current: planId === el.id && userSubscription.status === "active",
         cancel_end: userSubscription.cancel_end,
         canceled: userSubscription.canceled,
-      };
-    })
-    .sort((a, b) => (a?.unit_amount < b?.unit_amount ? -1 : 0));
-
-  return <Prices prices={plans} />;
+        unit_amount: el.unit_amount || 0,
+      })
+    )
+    .sort((a, b) => (a.unit_amount < b.unit_amount ? -1 : 0));
+  return prices;
 };
-
-export default Pricing;

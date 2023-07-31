@@ -1,15 +1,17 @@
 "use client";
 import Price from "@/components/Price";
 import Switch from "@/components/Switch";
+import { TPrice } from "@/lib/types/prices";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type Props = {
-  prices: any;
+  prices: TPrice[];
 };
 
 const Prices = ({ prices }: Props) => {
   const [yearly, setYearly] = useState(false);
+
   const filteredPrices = prices.filter((el) => el.yearly === yearly);
   const router = useRouter();
 
@@ -42,6 +44,9 @@ const Prices = ({ prices }: Props) => {
         },
       }
     );
+    if (result) {
+      router.refresh();
+    }
   };
 
   return (
@@ -58,7 +63,7 @@ const Prices = ({ prices }: Props) => {
         </div>
         <Switch onClick={() => setYearly(!yearly)} checked={yearly} />
         <div className="grid max-w-3xl grid-cols-1 gap-6 mx-auto mt-8 sm:mt-16 sm:grid-cols-2">
-          {filteredPrices.map((price: any, index: number) => (
+          {filteredPrices.map((price: TPrice, index: number) => (
             <Price
               choosePrice={choosePrice}
               cancelPrice={cancelPrice}

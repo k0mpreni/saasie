@@ -40,7 +40,6 @@ const LoginForm = ({ session }: { session: Session | null }) => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      console.log("tutu");
       router.refresh();
     } catch (e) {
       console.error("Impossible to logout", e);

@@ -1,18 +1,28 @@
+import { Database } from "@/lib/database.types";
 import { stripe } from "@/lib/stripe";
-import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import Stripe from "stripe";
 
-export const handleCheckoutCompleted = async (checkout) => {
-  const supabase = createServerActionClient({ cookies });
+export const handleCheckoutCompleted = async (
+  checkout: Stripe.Event.Data.Object
+) => {
+  const supabase = createRouteHandlerClient<Database>(
+    { cookies },
+    {
+      supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    }
+  );
   const userId = checkout.metadata.userId;
 
   const subscriptionId = checkout.subscription;
   const subscription = await stripe.subscriptions.retrieve(
     subscriptionId as string
   );
+
   try {
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from("profiles")
       .update({
         stripe_subscription_id: subscription.id,
@@ -25,7 +35,7 @@ export const handleCheckoutCompleted = async (checkout) => {
   }
 };
 
-export const POST = async (request: Request) => {
+export async function POST(request: Request) {
   const stripeSignature = request.headers.get("stripe-signature");
 
   if (!stripeSignature) {
@@ -40,9 +50,10 @@ export const POST = async (request: Request) => {
     stripeEvent = stripe.webhooks.constructEvent(
       body,
       stripeSignature,
-      process.env.NEXT_PUBLIC_STRIPE_SIGNING_SECRET
+      process.env.STRIPE_SIGNING_SECRET!
     );
   } catch (e) {
+    console.error("Stripe Construct Event failed:", e);
     return NextResponse.json("Invalid signature", { status: 401 });
   }
   try {
@@ -56,10 +67,9 @@ export const POST = async (request: Request) => {
         return NextResponse.json({ received: true }, { status: 200 });
     }
   } catch (e) {
-    console.log(e);
     return NextResponse.json(`Error processing event ${stripeEvent.type}`, {
       status: 500,
     });
   }
   return NextResponse.json({ received: true }, { status: 200 });
-};
+}

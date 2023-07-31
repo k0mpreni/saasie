@@ -1,7 +1,8 @@
+import { TPrice } from "@/lib/types/prices";
 import { FormEvent } from "react";
 
 type Props = {
-  price: any;
+  price: TPrice;
   principal?: boolean;
   noCard?: boolean;
   choosePrice: (priceId: string) => void;
@@ -17,7 +18,7 @@ const Price = ({
 }: Props) => {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (price.current && !price.cancelled) {
+    if (price.current && !price.canceled) {
       cancelPrice(price.id);
     } else {
       choosePrice(price.id);
@@ -105,8 +106,7 @@ const Price = ({
                 />
               </svg>
               <span className="text-base font-medium text-gray-900">
-                {" "}
-                Full Celebration Library{" "}
+                Full Celebration Library
               </span>
             </li>
             <li className="inline-flex items-center space-x-2">
@@ -123,8 +123,7 @@ const Price = ({
                 />
               </svg>
               <span className="text-base font-medium text-gray-400">
-                {" "}
-                Design Files Included{" "}
+                Design Files Included
               </span>
             </li>
 
@@ -142,8 +141,7 @@ const Price = ({
                 />
               </svg>
               <span className="text-base font-medium text-gray-400">
-                {" "}
-                Premium Support{" "}
+                Premium Support
               </span>
             </li>
           </ul>
