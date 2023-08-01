@@ -1,12 +1,12 @@
 import { Database } from "@/lib/database.types";
 import { stripe } from "@/lib/stripe";
-import { TPrice, TUserSubscription } from "@/lib/types/prices";
+import { TPlan, TUserSubscription } from "@/lib/types/plan";
 import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
-export const getPrices = async () => {
+export const getPlans = async () => {
   const productsRes = await stripe.products.list();
-  const priceRes = await stripe.prices.list();
+  const productRes = await stripe.prices.list();
   const supabase = createServerActionClient<Database>({ cookies });
   const { data, error } = await supabase
     .from("profiles")
@@ -21,20 +21,24 @@ export const getPrices = async () => {
     canceled: false,
   };
   if (subscriptionId) {
-    const subscription = await stripe.subscriptions.retrieve(
-      subscriptionId as string
-    );
-    userSubscription = {
-      status: subscription.status,
-      cancel_end: subscription.cancel_at,
-      canceled: subscription.status === "canceled",
-    };
+    try {
+      const subscription = await stripe.subscriptions.retrieve(
+        subscriptionId as string
+      );
+      userSubscription = {
+        status: subscription.status,
+        cancel_end: subscription.cancel_at,
+        canceled: subscription.status === "canceled",
+      };
+    } catch (e) {
+      console.log("Some happened", e);
+    }
   }
-  const prices = priceRes.data
+  const plans = productRes.data
     .map(
-      (el): TPrice => ({
+      (el): TPlan => ({
         id: el.id,
-        name: productsRes.data[0].name,
+        name: el.nickname!,
         yearly: el.recurring?.interval === "year",
         current: planId === el.id && userSubscription.status === "active",
         cancel_end: userSubscription.cancel_end,
@@ -43,5 +47,5 @@ export const getPrices = async () => {
       })
     )
     .sort((a, b) => (a.unit_amount < b.unit_amount ? -1 : 0));
-  return prices;
+  return plans;
 };

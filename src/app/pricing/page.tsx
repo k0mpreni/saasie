@@ -1,11 +1,11 @@
-import { getPrices } from "@/services/prices";
-import Prices from "./prices";
+import { getPlans } from "@/services/plans";
+import Plans from "./plans";
 
-export const revalidate = 10;
+export const revalidate = 0;
 
 const Pricing = async () => {
-  const prices = await getPrices();
-  return <Prices prices={prices} />;
+  const plans = await getPlans();
+  return <Plans plans={plans} />;
 };
 
 export default Pricing;

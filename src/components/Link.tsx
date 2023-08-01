@@ -7,10 +7,7 @@ type Props = {
 
 const StyledLink = ({ link, title }: Props) => {
   return (
-    <Link
-      href={link}
-      className="text-base text-black transition-all duration-200 hover:text-opacity-80"
-    >
+    <Link href={link} className="text-base text-black hover:text-opacity-80">
       {title}
     </Link>
   );

@@ -1,6 +1,6 @@
 import { Database } from "@/lib/database.types";
 import { stripe } from "@/lib/stripe";
-import { TPrice, TUserSubscription } from "@/lib/types/prices";
+import { TPlan, TUserSubscription } from "@/lib/types/plan";
 import {
   createRouteHandlerClient,
   createServerActionClient,
@@ -16,13 +16,14 @@ export async function POST(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
+  if (!session) {
+    return NextResponse.json({ url: `${url.origin}/login` });
+  }
+
   switch (action) {
     case "choosePrice": {
       const body = await req.json();
       const priceId = body.priceId || undefined;
-      if (!session) {
-        return NextResponse.redirect(`${url.origin}/login`);
-      }
       const { data } = await supabase
         .from("profiles")
         .select()
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
         ],
         mode: "subscription",
         success_url: `${url.origin}/pricing/success`,
-        cancel_url: `${url.origin}/pricing/cancel`,
+        cancel_url: `${url.origin}/pricing`,
         // Uncomment to add a free trial without card required
         // subscription_data: {
         // 	trial_settings: {
@@ -79,9 +80,6 @@ export async function POST(req: NextRequest) {
     case "cancelPrice": {
       const body = await req.json();
       const priceId = body.priceId || undefined;
-      if (!session) {
-        return NextResponse.redirect(`${url.origin}/login`);
-      }
       const { data: supRes, error } = await supabase
         .from("profiles")
         .select(
@@ -131,13 +129,13 @@ export async function GET(req: NextRequest) {
   const action = url.searchParams.get("action");
 
   switch (action) {
-    case "prices":
+    case "plans":
       const productsRes = await stripe.products.list();
       const priceRes = await stripe.prices.list();
 
-      const prices = priceRes.data
+      const plans = priceRes.data
         .map(
-          (el): TPrice => ({
+          (el): TPlan => ({
             id: el.id,
             name: productsRes.data[0].name,
             yearly: el.recurring?.interval === "year",
@@ -145,7 +143,7 @@ export async function GET(req: NextRequest) {
           })
         )
         .sort((a, b) => (a.unit_amount < b.unit_amount ? -1 : 0));
-      return NextResponse.json(prices, { status: 200 });
+      return NextResponse.json(plans, { status: 200 });
     case "userPrice":
       const supabase = createRouteHandlerClient<Database>({ cookies });
       const { data, error } = await supabase
@@ -160,7 +158,6 @@ export async function GET(req: NextRequest) {
         cancel_end: null,
         canceled: false,
       };
-      console.log("tututututut", subscriptionId);
       if (subscriptionId) {
         const subscription = await stripe.subscriptions.retrieve(
           subscriptionId as string

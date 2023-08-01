@@ -1,9 +1,16 @@
 import Hero from "@/components/Hero";
+import { Database } from "@/lib/database.types";
+import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = createServerActionClient<Database>({ cookies });
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   return (
-    <main className="bg-gradient-to-b from-transparent to-gray-200 h-full">
-      <Hero />
+    <main>
+      <Hero isLoggedIn={!!session} />
     </main>
   );
 }

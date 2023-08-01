@@ -5,10 +5,10 @@ import RoundLink from "./RoundLink";
 
 type Props = {};
 
-const Nav = (props: Props) => {
+const Nav = ({}: Props) => {
+  const isLoggedIn = false;
   const [showMenu, setShowMenu] = useState(false);
   const toggleMenu = () => setShowMenu(!showMenu);
-  const isLoggedIn = false;
   return (
     <header className="bg-opacity-30">
       <nav className="px-4 mx-auto sm:px-6 lg:px-8">
@@ -72,8 +72,7 @@ const Nav = (props: Props) => {
             {isLoggedIn ? (
               <RoundLink name="Account" link="/account" />
             ) : (
-              // <RoundLink name="Join now" link="/login" />
-              <RoundLink name="Account" link="/account" />
+              <RoundLink name="Join now" link="/login" />
             )}
           </div>
         </div>

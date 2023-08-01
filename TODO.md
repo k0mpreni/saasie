@@ -1,0 +1,7 @@
+- Account page
+- Cancel Page
+- Loading plans page
+- Join Now button in home page
+- Split plans and user price
+- Fix Cancel loading
+- Setup vercel envs
